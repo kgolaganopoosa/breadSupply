@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bread Supply | Freshly Baked</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background: #fafafa; }
+        .slide { display: none; }
+        .slide.active { display: block; }
+        .bento-shadow { box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); }
+    </style>
+</head>
+<body>
+
+    <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-md p-6 border-b border-gray-100 flex justify-between items-center">
+        <h1 class="text-2xl font-black tracking-tighter">BREAD SUPPLY</h1>
+        <button onclick="toggleCartModal()" class="bg-orange-500 text-white px-4 py-2 rounded-lg font-bold text-sm">
+            Cart (<span id="cart-count">0</span>)
+        </button>
+    </nav>
+
+    <main class="max-w-5xl mx-auto px-6 py-12">
+        <h2 class="text-4xl font-black mb-10">Fresh Picks</h2>
+        <div id="product-grid" class="grid grid-cols-1 md:grid-cols-2 gap-8"></div>
+    </main>
+
+    <footer class="max-w-5xl mx-auto px-6 py-16 mt-12 bg-gray-50 border-t">
+        <div class="grid md:grid-cols-3 gap-12 text-sm">
+            <div><h4 class="font-bold text-black mb-4 uppercase">Privacy Policy</h4><p class="text-gray-600 leading-relaxed">We collect minimal data to facilitate your delivery. Data is used only to manage your order.</p></div>
+            <div><h4 class="font-bold text-black mb-4 uppercase">Terms of Use</h4><p class="text-gray-600 leading-relaxed">By ordering, you agree to our terms. Ensure your delivery address is accurate.</p></div>
+            <div><h4 class="font-bold text-black mb-4 uppercase">Terms & Conditions</h4><p class="text-gray-600 leading-relaxed">All products are freshly baked. A flat delivery fee of R3 applies to every order.</p></div>
+        </div>
+    </footer>
+
+    <div id="cart-modal" class="hidden fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-6">
+        <div class="bg-white p-8 rounded-3xl w-full max-w-md">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-black">Your List</h3>
+                <button onclick="toggleCartModal()" class="text-gray-500 font-bold">Close</button>
+            </div>
+            <div id="cart-items" class="mb-6 space-y-4"></div>
+            <div class="flex gap-2">
+                <button onclick="clearCart()" class="w-1/3 bg-gray-100 py-4 rounded-xl font-bold text-sm">Clear</button>
+                <button onclick="checkoutAll()" class="w-2/3 bg-orange-600 text-white py-4 rounded-xl font-bold">Checkout</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const WA_NUMBER = "27824598656";
+        const DELIVERY_FEE = 3;
+
+        const products = [
+            { id: 1, name: "SASKO Brown Bread", price: 14, imgs: ["https://images.unsplash.com/photo-1549931319-a545dcf3bc73", "https://images.unsplash.com/photo-1589367366595-39d73f324835"] },
+            { id: 2, name: "SASKO White Bread", price: 15, imgs: ["https://images.unsplash.com/photo-1509440159596-0249088772ff", "https://images.unsplash.com/photo-1612203852037-33650b7b6290"] }
+        ];
+
+        function renderProducts() {
+            const grid = document.getElementById('product-grid');
+            const qtyOptions = Array.from({length: 12}, (_, i) => `<option>${i + 1}</option>`).join('');
+            
+            grid.innerHTML = products.map(p => `
+                <div class="bg-white p-5 rounded-3xl bento-shadow border border-gray-100">
+                    <div class="relative h-64 overflow-hidden rounded-2xl mb-4">
+                        <div class="slider-${p.id}">
+                            ${p.imgs.map((img, i) => `<img src="${img}" class="slide ${i === 0 ? 'active' : ''} w-full h-64 object-cover">`).join('')}
+                        </div>
+                        <button onclick="moveSlide('slider-${p.id}', -1)" class="absolute left-2 top-1/2 bg-white/90 p-2 rounded-full">❮</button>
+                        <button onclick="moveSlide('slider-${p.id}', 1)" class="absolute right-2 top-1/2 bg-white/90 p-2 rounded-full">❯</button>
+                    </div>
+                    <h3 class="text-xl font-bold">${p.name}</h3>
+                    <p class="text-2xl font-black text-orange-600 my-2">R${p.price}.00</p>
+                    <div class="flex gap-2 mb-3">
+                        <select id="qty${p.id}" class="bg-gray-100 p-3 rounded-xl font-bold">${qtyOptions}</select>
+                        <button onclick="checkout('${p.name}', ${p.price}, 'qty${p.id}')" class="bg-black text-white px-6 rounded-xl font-bold flex-1">Buy Now</button>
+                    </div>
+                    <button onclick="addToCart('${p.name}', ${p.price}, 'qty${p.id}')" class="w-full py-3 border-2 border-gray-200 rounded-xl font-bold text-sm">Add to List</button>
+                </div>
+            `).join('');
+        }
+
+        function moveSlide(sliderClass, dir) {
+            const container = document.querySelector('.' + sliderClass);
+            const slides = container.querySelectorAll('.slide');
+            let active = Array.from(slides).findIndex(s => s.classList.contains('active'));
+            slides[active].classList.remove('active');
+            let next = (active + dir + slides.length) % slides.length;
+            slides[next].classList.add('active');
+        }
+
+        function toggleCartModal() {
+            const modal = document.getElementById('cart-modal');
+            modal.classList.toggle('hidden');
+            if (!modal.classList.contains('hidden')) renderCart();
+        }
+
+        function addToCart(name, price, qtyId) {
+            let cart = JSON.parse(localStorage.getItem('breadCart') || '[]');
+            cart.push({ name, price, qty: document.getElementById(qtyId).value });
+            localStorage.setItem('breadCart', JSON.stringify(cart));
+            updateCartUI();
+            alert(name + " added to your list!");
+        }
+
+        function updateCartUI() {
+            const cart = JSON.parse(localStorage.getItem('breadCart') || '[]');
+            document.getElementById('cart-count').innerText = cart.length;
+        }
+
+        function renderCart() {
+            const cart = JSON.parse(localStorage.getItem('breadCart') || '[]');
+            const container = document.getElementById('cart-items');
+            let subtotal = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+            container.innerHTML = cart.length ? `
+                ${cart.map(item => `<div class="flex justify-between border-b pb-2"><span>${item.qty}x ${item.name}</span><span class="font-bold">R${item.price * item.qty}</span></div>`).join('')}
+                <div class="flex justify-between pt-4 font-bold text-lg"><span>Delivery</span><span>R${DELIVERY_FEE}</span></div>
+                <div class="flex justify-between pt-2 text-xl font-black text-orange-600"><span>Total</span><span>R${subtotal + DELIVERY_FEE}</span></div>
+            ` : '<p class="text-gray-400">Your list is empty.</p>';
+        }
+
+        function clearCart() {
+            localStorage.removeItem('breadCart');
+            updateCartUI();
+            renderCart();
+        }
+
+        function checkout(product, price, qty) {
+            const quantity = document.getElementById(qty).value;
+            const total = (price * quantity) + DELIVERY_FEE;
+            const msg = `Order: ${product}%0AQuantity: ${quantity}%0ADelivery Fee: R${DELIVERY_FEE}%0ATotal: R${total}`;
+            window.open(`https://wa.me/${WA_NUMBER}?text=${msg}`, '_blank');
+        }
+
+        function checkoutAll() {
+            const cart = JSON.parse(localStorage.getItem('breadCart') || '[]');
+            if(cart.length === 0) return alert("Your list is empty!");
+            let subtotal = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+            let msg = "Order Summary:%0A" + cart.map(i => `${i.qty}x ${i.name}`).join('%0A') + `%0ADelivery Fee: R${DELIVERY_FEE}%0A*Total: R${subtotal + DELIVERY_FEE}*`;
+            window.open(`https://wa.me/${WA_NUMBER}?text=${msg}`, '_blank');
+        }
+
+        renderProducts();
+        updateCartUI();
+    </script>
+</body>
+</html>
