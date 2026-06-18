@@ -1,10 +1,6 @@
 {
-  "name": "Bread Supply",
-  "short_name": "Bread",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#f97316",
-  "theme_color": "#f97316",
+  "name": "Your App Name",
+  "short_name": "App",
   "icons": [
     {
       "src": "icon.png",
@@ -12,9 +8,11 @@
       "type": "image/png"
     },
     {
-      "src": "icon-512.png",
+      "src": "icon.png",
       "sizes": "512x512",
       "type": "image/png"
     }
-  ]
+  ],
+  "start_url": "/",
+  "display": "standalone"
 }
