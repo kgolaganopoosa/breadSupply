@@ -1,7 +1,7 @@
 {
   "name": "Bread Supply",
   "short_name": "Bread Supply",
-  "start_url": "/breadSupply/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
