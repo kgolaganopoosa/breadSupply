@@ -1,7 +1,7 @@
 {
   "name": "Bread Supply",
   "short_name": "Bread Supply",
-  "start_url": "/index.html",
+  "start_url": "https://kgolaganopoosa.github.io/breadSupply/index.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
